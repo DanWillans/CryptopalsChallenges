@@ -18,6 +18,7 @@ add_library(decoding src/decoding.cpp)
 add_library(conversion src/conversion.cpp)
 add_library(utilities src/utilities.cpp)
 add_library(set_1 src/set_1.cpp)
+add_library(set_2 src/set_2.cpp)
 
 target_link_libraries(set_1 PUBLIC decoding utilities OpenSSL::SSL)
 
@@ -39,8 +40,12 @@ target_link_libraries(set_1_tests PUBLIC gtest pthread conversion encoding decod
 add_executable(utilities_tests test/utilities_tests.cpp)
 target_link_libraries(utilities_tests PUBLIC gtest pthread utilities conversion)
 
+add_executable(set_2_tests test/set_2/set_2_tests.cpp)
+target_link_libraries(set_2_tests PUBLIC gtest pthread utilities conversion set_1 set_2 encoding decoding)
+
 gtest_discover_tests(base64_decoding_test)
 gtest_discover_tests(base64_encoding_test)
 gtest_discover_tests(conversion_test)
 gtest_discover_tests(set_1_tests)
 gtest_discover_tests(utilities_tests)
+gtest_discover_tests(set_2_tests)

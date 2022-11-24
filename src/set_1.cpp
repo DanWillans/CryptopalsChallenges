@@ -66,6 +66,8 @@ int get_keysize_score(const std::string &str, int keysize, double &score) {
   return 0;
 }
 
+} // namespace
+
 int calculate_keysize(uint start, uint end, const std::string &str,
                       int &keysize) {
   if ((end - start) > (str.size() / 2)) {
@@ -88,8 +90,6 @@ int calculate_keysize(uint start, uint end, const std::string &str,
   }
   return 0;
 }
-
-} // namespace
 
 int fixed_xor(const std::string &hex_str_1, const std::string &hex_str_2,
               std::string &output) {
@@ -302,7 +302,7 @@ int aes_128_ecb_decrypt(const std::string &str, const std::string &key,
     std::cerr << "Failed to call CipherInit\n";
     return -1;
   }
-  // Set padding to true so that we get partially filled data blocks
+  // Set padding to true so that we get the partially filled data blocks
   err = EVP_CIPHER_CTX_set_padding(ctx, 0);
   if (!err) {
     std::cerr << "Failed to set padding to ctx\n";
@@ -311,7 +311,53 @@ int aes_128_ecb_decrypt(const std::string &str, const std::string &key,
   // Now decrypt the str
   int output_len{0};
   std::vector<unsigned char> output_buffer;
-  output_buffer.resize(str.size() + EVP_MAX_BLOCK_LENGTH);
+  output_buffer.resize(str.size());
+  err = EVP_CipherUpdate(ctx, output_buffer.data(), &output_len,
+                         reinterpret_cast<const unsigned char *>(str.c_str()),
+                         str.size());
+  if (!err) {
+    std::cerr << "Failed to call CipherUpdate\n";
+    return -1;
+  }
+  output =
+      std::string{output_buffer.begin(), output_buffer.begin() + output_len};
+  return 0;
+}
+
+int aes_128_ecb_encrypt(const std::string &str, const std::string &key,
+                        std::string &output) {
+  EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+  if (!ctx) {
+    return -1;
+  }
+  // Don't set the key yet to check the key and iv lengths
+  int err = EVP_CipherInit(ctx, EVP_aes_128_ecb(), nullptr, nullptr, 1);
+  if (!err) {
+    std::cerr << "Failed to call CipherInit without key\n";
+    return -1;
+  }
+  // aes_128_ecb has a key length of 16 bytes
+  OPENSSL_assert(EVP_CIPHER_CTX_key_length(ctx) == 16);
+  // iv length == 0 because of ECB I think?
+  OPENSSL_assert(EVP_CIPHER_CTX_iv_length(ctx) == 0);
+  // Set the key now
+  err = EVP_CipherInit(ctx, nullptr,
+                       reinterpret_cast<const unsigned char *>(key.c_str()),
+                       nullptr, 1);
+  if (!err) {
+    std::cerr << "Failed to call CipherInit\n";
+    return -1;
+  }
+  // Set padding to true so that we get the partially filled data blocks
+  err = EVP_CIPHER_CTX_set_padding(ctx, 0);
+  if (!err) {
+    std::cerr << "Failed to set padding to ctx\n";
+    return -1;
+  }
+  // Now decrypt the str
+  int output_len{0};
+  std::vector<unsigned char> output_buffer;
+  output_buffer.resize(str.size());
   err = EVP_CipherUpdate(ctx, output_buffer.data(), &output_len,
                          reinterpret_cast<const unsigned char *>(str.c_str()),
                          str.size());

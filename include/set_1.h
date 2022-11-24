@@ -10,6 +10,9 @@ int fixed_xor(const std::string &hex_str_1, const std::string &hex_str_2,
 int repeating_key_xor(const std::string &hex_str_1, const std::string &key,
                       std::string &output);
 
+int calculate_keysize(uint start, uint end, const std::string &str,
+                      int &keysize);
+
 struct CipherResult {
   std::string message{""};
   std::string key{""};
@@ -28,6 +31,9 @@ int break_repeating_key_xor(const std::string &base64_string,
 int aes_128_ecb_decrypt(const std::string &str, const std::string &key,
                         std::string &output);
 
+int aes_128_ecb_encrypt(const std::string &str, const std::string &key,
+                        std::string &output);
+
 int is_ecb_encryption(const std::vector<uint8_t> &bytes, int blocksize,
-                      int& res);
+                      int &res);
 #endif // !INCLUDE_SET_1_H_
